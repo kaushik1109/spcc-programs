@@ -1,0 +1,157 @@
+Calculator
+
+Calculator_yacc_lex.l
+%{
+#include<stdio.h>
+#include "calculator_yacc.tab.h"
+extern int yylval;
+%}
+%%
+[0-9]+ {
+yylval=atoi(yytext);
+return NUMBER;
+}
+[\t] ;
+[\n] return 0;
+. return yytext[0];
+%%
+int yywrap()
+{
+return 1;
+}
+calculator_yacc.y
+%{
+#include<stdio.h>
+int flag=0;
+%}
+%token NUMBER
+%left '+' '-'
+%left '*' '/' '%'
+%left '(' ')'
+%%
+ArithmeticExpression: E{
+printf("\nResult=%d\n",$$);
+return 0;
+};
+E:E'+'E {$$=$1+$3;}
+|E'-'E {$$=$1-$3;}
+|E'*'E {$$=$1*$3;}
+|E'/'E {$$=$1/$3;}
+|E'%'E {$$=$1%$3;}
+|'('E')' {$$=$2;}
+| NUMBER {$$=$1;}
+;
+%%
+int main()
+{
+printf("\nEnter Any Arithmetic Expression which
+can have operations Addition, Subtraction,
+Multiplication, Divison, Modulus and Round
+brackets:\n");
+yyparse();
+if(flag==0)
+printf("\nEntered arithmetic expression is
+Valid\n\n");
+}
+int yyerror(void)
+{
+printf("error");
+flag=1;
+}
+
+flex calculator.l
+bison -d calculator.y
+gcc lex.yy.c calculator.tab.c
+a.exe
+
+
+Id.l
+%option noyywrap
+%{
+#include"id.tab.h"
+%}
+%%
+[a-zA-Z] {return LETTER;}
+[0-9] {return DIGIT;}
+[_] {return UND;}
+[\n] {return NL;}
+. {return yytext[0];}
+%%
+
+Id.y
+%{
+#include<stdio.h>
+#include<stdlib.h>
+%}
+%token DIGIT LETTER UND NL
+%%
+
+stmt: variable NL {printf("valid identifiers\n");
+exit(0);}
+;
+variable: LETTER alphanumeric
+;
+alphanumeric: LETTER alphanumeric | DIGIT
+alphanumeric | UND alphanumeric | LETTER | DIGIT
+| UND
+;
+%%
+int yyerror(char *msg)
+{
+printf("Invalid variable\n");
+exit(0);
+}
+main()
+{
+printf("enter the variable: \n");
+yyparse();
+}
+
+
+
+If.l
+%option noyywrap
+%{
+#include "if.tab.h"
+%}
+%%
+"if" {return IF;}
+[sS][0-9]* {return S;}
+"<"|">"|"=="|"<="|">="|"!=" {return RELOP;}
+[0-9]+ {return NUMBER;}
+[a-z][a-zA-Z0-9_]* {return ID;}
+\n {return NL;}
+. {return yytext[0];}
+%%
+If.y
+%{
+#include<stdio.h>
+#include<stdlib.h>
+int count=0;
+%}
+%token IF RELOP S NUMBER ID N
+
+%%
+stmt: if_stmt NL {printf("Number of nested if
+statements=%d\n",count);exit(0);}
+;
+if_stmt : IF'('cond')''{'if_stmt'}' {count++;}
+|S
+;
+cond: x RELOP x
+;
+x:ID | NUMBER
+;
+%%
+int yyerror(char *msg)
+{
+printf("The statement is invalid\n");
+exit(0);
+}
+main()
+{
+printf("Enter the statement : \n");
+yyparse();
+}
+
+
